@@ -1,6 +1,6 @@
 <template>
-    <div v-if="GStore.event">
-        <h1>{{ GStore.event.title }}</h1>
+    <div v-if="eventModule.event">
+        <h1>{{ eventModule.event.title }}</h1>
         <div id="nav">
             <router-link :to="{ name: 'EventDetails' }">Details</router-link>
             |
@@ -8,12 +8,16 @@
             |
             <router-link :to="{ name: 'EventEdit' }">Edit</router-link>
         </div>
-        <router-view :event="GStore.event"></router-view>
+        <router-view :event="eventModule.event"></router-view>
     </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
-    inject:['GStore']
+    inject:['GStore'],
+    computed:{
+        ...mapState(['eventModule'])
+    }
 }
 </script>

@@ -1,13 +1,17 @@
 <template>
     <div class="events">
-        <h1>Events for good</h1>
-        <EventCard v-for="(item, i) in events" :key="i" :event="item" />
+        <h1>Events for {{ userModule.user.name }}</h1>
+        <EventCard
+            v-for="(item, i) in eventModule.events"
+            :key="i"
+            :event="item"
+        />
         <div class="pagination">
             <router-link
                 id="page-next"
                 :to="{ name: 'event-list', query: { page: page + 1 } }"
                 rel="next"
-                v-if="!hasNextPage"
+                v-if="hasNextPage"
                 >next</router-link
             >
             <router-link
@@ -24,44 +28,39 @@
 <script>
 // @ is an alias to /src
 import EventCard from '@/components/EventCard.vue'
-import EventService from '@/core/services/EventService'
+import { mapState } from 'vuex'
+import store from '@/store/index'
+const getPageEvents = (to, next) => {
+    const currentPage = parseInt(to.query.page) || 1
+    store
+        .dispatch('eventModule/fetchEvents', currentPage)
+        .then(() => {
+            to.params.page = currentPage
+            next()
+        })
+        .catch(() => next({ name: 'NetworkError' }))
+}
+
 export default {
     name: 'EventList',
     props: ['page'],
     components: {
         EventCard, // register it as a child component
     },
-    data() {
-        return {
-            events: null,
-            totalEvent: 0,
-        }
-    },
     beforeRouteEnter(to, from, next) {
-        EventService.getEvents(2, parseInt(to.query.page) || 1)
-            .then((res) => {
-                next((comp) => {
-                    comp.events = res.data
-                    comp.totalEvent = parseInt(res.headers['x-total-count'])
-                })
-            })
-            .catch(() => next({ name: 'NetworkError' }))
+        getPageEvents(to, next)
     },
-    beforeRouteUpdate(to) {
-        return EventService.getEvents(2, parseInt(to.query.page) || 1)
-            .then((res) => {
-                this.events = res.data
-                this.totalEvent = parseInt(res.headers['x-total-count'])
-            })
-            .catch(() => {
-                return { name: 'NetworkError' }
-            })
+    beforeRouteUpdate(to, from, next) {
+        getPageEvents(to, next)
     },
     computed: {
         hasNextPage() {
-            let totalPages = Math.ceil(this.totalEvent / 2)
-            return this.page >= totalPages
+            return (
+                this.eventModule.EventsCount >
+                this.page * this.eventModule.perPage
+            )
         },
+        ...mapState(['eventModule', 'userModule']),
     },
 }
 </script>

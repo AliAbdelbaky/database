@@ -8,8 +8,8 @@ import EventDetails from "@/views/event/EventDetails.vue";
 import EventRegister from "@/views/event/EventRegister.vue";
 import EventEdit from "@/views/event/EventEdit.vue";
 import NProgress from 'nprogress'
-import EventService from '@/core/services/EventService.js'
 import GStore from '@/store/gstore'
+import store from "@/store/index";
 const routes = [{
         path: "/",
         name: "event-list",
@@ -29,25 +29,24 @@ const routes = [{
         name: 'EventLayout',
         props: true,
         component: EventLayout,
-        beforeEnter: (to) => {
-            return EventService.getEvent(to.params.id)
-                .then((response) => {
-                    GStore.event = response.data
-                })
-                .catch((error) => {
-                    if (error.response && error.response.status == 404) {
-                        return {
-                            name: '404',
-                            params: {
-                                resource: 'event'
-                            },
-                        }
-                    } else {
-                        return {
-                            name: 'NetworkError'
+        beforeEnter(to, from, next) {
+            store.dispatch('eventModule/getSingleEvent', to.params.id).then(event => {
+                to.params.event = event
+                next()
+            }).catch((err) => {
+                if (err.response && err.response.status == 404) {
+                    return{
+                        name: '404',
+                        params: {
+                            resource: 'event'
                         }
                     }
-                })
+                } else {
+                    return{
+                        name: 'NetworkError'
+                    }
+                }
+            })
         },
         children: [ // <-----
             {
@@ -69,6 +68,11 @@ const routes = [{
                 }
             }
         ]
+    },
+    {
+        path: '/event/create',
+        name: 'EventCreate',
+        component: () => import("@/views/EventCreate.vue")
     },
     {
         path: '/:catchAll(.*)',
