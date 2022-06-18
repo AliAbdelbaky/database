@@ -2,7 +2,7 @@
     <h1>Create an event</h1>
 
     <div class="form-container">
-        {{ userModule.user.name }}
+        {{ userStore.name }}
         <form @submit.prevent="onSubmit">
             <label>Select a category: </label>
             <select v-model="event.category">
@@ -49,8 +49,18 @@
     </div>
 </template>
 <script>
-import { mapState } from 'vuex'
+import PiniaEvent from '@/store/modules/event'
+import PiniaUser from '@/store/modules/user'
+
 export default {
+    setup() {
+        const eventStore = PiniaEvent(),
+            userStore = PiniaUser()
+        return {
+            userStore,
+            eventStore,
+        }
+    },
     data() {
         return {
             categories: [
@@ -77,11 +87,12 @@ export default {
             const event = {
                 ...this.event,
                 id: Math.floor(Math.random() * 10000000),
-                organizer: this.userModule.user.name,
+                organizer: this.userStore.name,
             }
-            this.$store
-                .dispatch('eventModule/createEvent', event)
+            this.eventStore
+                .createEvent(event)
                 .then(() => {
+                    console.log(event.id)
                     this.$router.push({
                         name: 'EventLayout',
                         params: { id: event.id },
@@ -89,9 +100,6 @@ export default {
                 })
                 .catch((err) => console.log(err))
         },
-    },
-    computed: {
-        ...mapState(['userModule']),
     },
 }
 </script>

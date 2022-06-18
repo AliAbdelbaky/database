@@ -1,8 +1,8 @@
 <template>
     <div class="events">
-        <h1>Events for {{ userModule.user.name }}</h1>
+        <h1>Events for {{ userStore.name || 'alisss' }}</h1>
         <EventCard
-            v-for="(item, i) in eventModule.events"
+            v-for="(item, i) in eventStore.events"
             :key="i"
             :event="item"
         />
@@ -28,12 +28,12 @@
 <script>
 // @ is an alias to /src
 import EventCard from '@/components/EventCard.vue'
-import { mapState } from 'vuex'
-import store from '@/store/index'
+import PiniaUser from '@/store/modules/user'
+import PiniaEvent from '@/store/modules/event'
 const getPageEvents = (to, next) => {
     const currentPage = parseInt(to.query.page) || 1
-    store
-        .dispatch('eventModule/fetchEvents', currentPage)
+    PiniaEvent()
+        .fetchEvents(currentPage)
         .then(() => {
             to.params.page = currentPage
             next()
@@ -44,8 +44,16 @@ const getPageEvents = (to, next) => {
 export default {
     name: 'EventList',
     props: ['page'],
+    setup() {
+        const userStore = PiniaUser()
+        const eventStore = PiniaEvent()
+        return {
+            userStore,
+            eventStore,
+        }
+    },
     components: {
-        EventCard, // register it as a child component
+        EventCard,
     },
     beforeRouteEnter(to, from, next) {
         getPageEvents(to, next)
@@ -56,11 +64,10 @@ export default {
     computed: {
         hasNextPage() {
             return (
-                this.eventModule.EventsCount >
-                this.page * this.eventModule.perPage
+                this.eventStore.EventsCount >
+                this.page * this.eventStore.perPage
             )
         },
-        ...mapState(['eventModule', 'userModule']),
     },
 }
 </script>

@@ -9,7 +9,8 @@ import EventRegister from "@/views/event/EventRegister.vue";
 import EventEdit from "@/views/event/EventEdit.vue";
 import NProgress from 'nprogress'
 import GStore from '@/store/gstore'
-import store from "@/store/index";
+// import store from "@/store/index";
+import PiniaEvent from '@/store/modules/event'
 const routes = [{
         path: "/",
         name: "event-list",
@@ -30,19 +31,20 @@ const routes = [{
         props: true,
         component: EventLayout,
         beforeEnter(to, from, next) {
-            store.dispatch('eventModule/getSingleEvent', to.params.id).then(event => {
+            PiniaEvent().getSingleEvent(to.params.id).then(event => {
+                console.log('sdasdasdasd', to.params.event)
                 to.params.event = event
                 next()
             }).catch((err) => {
                 if (err.response && err.response.status == 404) {
-                    return{
+                    return {
                         name: '404',
                         params: {
                             resource: 'event'
                         }
                     }
                 } else {
-                    return{
+                    return {
                         name: 'NetworkError'
                     }
                 }
@@ -107,6 +109,7 @@ const router = createRouter({
     }
 });
 router.beforeEach((to, from) => {
+    PiniaEvent()
     NProgress.start()
     const notAuthorized = true
     if (to.meta.requireAuth && notAuthorized) {
